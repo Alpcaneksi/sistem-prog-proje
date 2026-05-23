@@ -92,8 +92,7 @@ void archive_files(int file_count, char *files[], const char *output_file) {
     }
 
     fclose(out);
-    printf("Dosyalar birlestirildi. Cikti: %s\n", output_file);
-}
+printf("Basarili: %s arsiv dosyasi olusturuldu.\n", output_file);}
 
 // -a (Arşivden Çıkarma) İşlemi
 void extract_files(const char *archive_file, const char *target_dir) {
@@ -180,7 +179,6 @@ void extract_files(const char *archive_file, const char *target_dir) {
     }
 
     // Dosyaları dizine çıkartma ve izinleri koruma 
-    printf("%s dizininde ", target_dir ? target_dir : "gecerli");
     for (int i = 0; i < count; i++) {
         char target_path[1024];
         snprintf(target_path, sizeof(target_path), "%s/%s", current_dir, file_names[i]);
@@ -201,19 +199,19 @@ void extract_files(const char *archive_file, const char *target_dir) {
 
         // Orijinal izinleri geri atama 
         chmod(target_path, file_perms[i]);
-
-        if (i > 0 && i == count - 1) printf(" ve ");
-        else if (i > 0) printf(", ");
-        printf("%s", file_names[i]);
     }
-    printf(" dosyalari acildi.\n");
+    
+    // Arkadaşlarının formatındaki başarı mesajı
+    printf("Basarili: Arsiv basariyla %s/ dizinine cikarildi.\n", target_dir ? target_dir : ".");
 
     free(metadata);
     fclose(in);
 }
-
 int main(int argc, char *argv[]) {
-    if (argc < 3) exit(EXIT_FAILURE);
+    if (argc < 3) {
+        printf("Kullanim hatasi! Eksik arguman girdiniz.\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (strcmp(argv[1], "-b") == 0) {
         char *input_files[MAX_FILES];
@@ -226,10 +224,12 @@ int main(int argc, char *argv[]) {
                     output_file = argv[i + 1];
                     break;
                 } else {
+                    printf("Hata: -o parametresinden sonra dosya adi belirtilmedi!\n");
                     exit(EXIT_FAILURE);
                 }
             } else {
                 if (file_count >= MAX_FILES) {
+                    printf("Hata: Toplam giris dosyasi sayisi en fazla 32 olabilir.\n");
                     exit(EXIT_FAILURE);
                 }
                 input_files[file_count] = argv[i];
@@ -237,17 +237,27 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        if (file_count == 0) exit(EXIT_FAILURE);
+        if (file_count == 0) {
+            printf("Hata: Birlestirilecek dosya belirtilmedi!\n");
+            exit(EXIT_FAILURE);
+        }
         archive_files(file_count, input_files, output_file);
     } 
     else if (strcmp(argv[1], "-a") == 0) {
-        if (argc > 4) exit(EXIT_FAILURE);
+        if (argc > 4) {
+            printf("Hata: -a parametresi en fazla 2 arguman alabilir!\n");
+            exit(EXIT_FAILURE);
+        }
 
         const char *archive_file = argv[2];
         const char *target_dir = (argc == 4) ? argv[3] : NULL;
 
         extract_files(archive_file, target_dir);
     } 
+    else {
+        printf("Hatali parametre! Sadece -b veya -a kullanilabilir.\n");
+        exit(EXIT_FAILURE);
+    }
 
     return 0;
 }
